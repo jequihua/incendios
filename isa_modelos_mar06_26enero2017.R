@@ -8,25 +8,30 @@ library("randomForest")
 # limpiar memoria
 rm(list = ls())
 
-source("/home/jequihua/Documents/repositories/incendios/data_munging_tools.R")
-
-
-#######################################################
-#######################################################
-# agregagaci?n de variables y generaci?n de composites
-
-
-
-#Remove all temporary files currently in existence:
+# quitar los rasters temporales
 removeTmpFiles(h=0)
+
+# a donde se escriben los archivos temporales?
+rasterOptions()
+
+# asignar una carpeta donde aventar los archivos temporales para no tener problemas de espacio
+rasterOptions(tmpdir="/home/jequihua/Documents/isaincendios/temp")
+
+# cargar funciones
+source("/home/jequihua/Documents/repositories/incendios/data_munging_tools.R")
+source("/home/jequihua/Documents/repositories/incendios/modelling_tools.R")
+
+#######################################################
+#######################################################
+# agregagacion de variables y generacion de composites
 
 # puntos, datos de campo # se corre en dos ocaciones para caracterizar y cuando se calcular? la EQ 
 puntos <- readOGR("/home/jequihua/Documents/isaincendios/ameyalli/variables/AQ06_060.shp","AQ06_060",stringsAsFactors=FALSE) # cambiar el nombre del shape y el siguiente ""
 
 
 
-# ahora que ya se tienen la funcionalidad para encontrar las im?genes "m?s cercanas" a la fecha de cada punto,
-# podemos generar los composites aqu? mismo as? como asociarle las otras variables
+# ahora que ya se tienen la funcionalidad para encontrar las imagenes "mas cercanas" a la fecha de cada punto,
+# podemos generar los composites aqui mismo asi como asociarle las otras variables
 
 # para hacer esto conviene poner todas las capas que no se har?n composites en una carpeta aparte
 carpeta_noncomposites <- "/home/jequihua/Documents/isaincendios/ameyalli/variables/non_composites"
@@ -36,7 +41,7 @@ ladrillo_noncomposites <- ladrilloCarpeta(carpeta_noncomposites)
 # lista para los composites
 carpeta_composites_evi <- "/home/jequihua/Documents/isaincendios/ameyalli/variables/composites_evi"
 
-#carpeta_composites_ndvi <- "R:/EFICIENCIA/DATOS_modelos/variables/composites_ndvi"
+carpeta_composites_ndvi <- "/home/jequihua/Documents/isaincendios/ameyalli/variables/composites_ndvi"
 
 carpeta_composites_hum <- "/home/jequihua/Documents/isaincendios/ameyalli/variables/humedad"
 
@@ -50,8 +55,6 @@ lista_composites_evi <- list.files(carpeta_composites_evi,pattern="\\.tif$",full
 lista_composites_hum <- list.files(carpeta_composites_hum,pattern="\\.tif$",full.names=TRUE,recursive=FALSE) #aqu? cambie
 
 lista_composites_hum10h <- list.files(carpeta_composites_hum10h,pattern="\\.tif$",full.names=TRUE,recursive=FALSE) #PARA HUMEDAD 10 H
-
-lista_composites_hum
 
 ladrillo_composites_evi <- ladrilloCarpeta(carpeta_composites_evi)
 

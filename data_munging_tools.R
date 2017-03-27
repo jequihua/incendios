@@ -169,3 +169,9 @@ fecha_mas_cercana <- function(lista_imagenes,fecha_punto,numero_imagenes=1,mode=
                        num_compuestos=numero_imagenes)
   return(salida_06mar)  
 }
+
+# funcion para crear un stack de imagenes (brick) a partir de un path a una carpeta
+brick_folder <- function(folder,pattern="\\.tif$")
+{
+  files_list <- list.files(folder,pattern=pattern,full.names=TRUE,recursive=FALSE) 
+}
