@@ -30,11 +30,11 @@ ladrilloCarpeta <- function(carpeta,extension="tif")
   # primero le metemos la imagen base
   ladrillo <- addLayer(ladrillo,brick(lista_nueva[1]))
   
-  # lo rellenamos con todo lo dem?s
+  # lo rellenamos con todo lo demas
   for (i in 2:length(lista_nueva))
   {
     
-    # cargamos la i-?sima imagen
+    # cargamos la i-esima imagen
     imagen_aux <- brick(lista_nueva[[i]])
     
     print(imagen_aux)
@@ -102,7 +102,7 @@ fecha_puntos <- function(string_fecha,prefix="20")
 }
 
 # funcion para distancia entre fechas, regresa la fecha mas cercana
-fecha_mas_cercana <- function(lista_imagenes,fecha_punto,numero_imagenes=1,mode=4)
+fecha_mas_cercana <- function(lista_imagenes,fecha_punto,numero_imagenes,mode=4)
 {
 
   distancias_antes <- list()
@@ -170,8 +170,88 @@ fecha_mas_cercana <- function(lista_imagenes,fecha_punto,numero_imagenes=1,mode=
   return(salida_06mar)  
 }
 
-# funcion para crear un stack de imagenes (brick) a partir de un path a una carpeta
-brick_folder <- function(folder,pattern="\\.tif$")
+# funcion para, dada una variable, excluir valores de un shapefile o dataframe
+excluir <- function(tabla,campo="id_veg",quitar = c(20))
 {
-  files_list <- list.files(folder,pattern=pattern,full.names=TRUE,recursive=FALSE) 
+  tabla = tabla[!tabla[,campo] %in% quitar]
+  return(tabla)
 }
+
+# funcion para calcular fechas mas cercanas - antes y despues y extraer los correspondiente de composites
+# de rasters
+extract_fecha_mas_cercana <- function(ladrillo_composites,lista_composites,punto,variable_fecha="Posi_fecha",
+                                      mode,numero_imagenes=1,missing_value=-999)
+{
+  # imagenes mas cercanas (antes y despues)
+  imagenes <- fecha_mas_cercana(lista_composites,punto@data[,variable_fecha],mode=mode,numero_imagenes=numero_imagenes)
+  
+  # compuesto anterior
+  idx_antes <- imagenes$comp_antes
+  
+  # compuesto correspondiente
+  idx_corresp <- imagenes$comp_correspondiente
+  
+  # compuesto despues
+  idx_despues <- imagenes$comp_despues
+  
+  # hacemos los compuestos (funcion media si hay mas de uno) 
+  if (length(idx_antes$idx)>1)
+  {
+    compuesto_antes_media <- calc(subset(ladrillo_composites,subset=idx_antes$idx),fun=mean)
+  }
+  else
+  {
+    compuesto_antes_media <- subset(ladrillo_composites,subset=idx_antes$idx)
+  }
+  
+  # hacemos los compuestos (funcion media si hay mas de uno) 
+  if (length(idx_despues$idx)>1)
+  {
+    compuesto_despues_media <- calc(subset(ladrillo_composites,subset=idx_despues$idx),fun=mean)
+  }
+  else
+  {
+    compuesto_despues_media <- subset(ladrillo_composites,subset=idx_despues$idx)
+  }
+  
+  # compuesto correspondiente
+  compuesto_correspondiente <- subset(ladrillo_composites,subset=idx_corresp$idx)
+
+  
+  # extraemos la data para el punto (i-esimo) (operacion espacial) y la introducimos a nuestras listas
+  
+  # compuesto antes 
+  extraccion_antes <- extract(compuesto_antes_media,punto)
+  if (is.null(extraccion_antes))
+  {
+    extraccion_antes <- missing_value
+  }
+    
+  # compuesto despues
+  extraccion_despues <- extract(compuesto_despues_media,punto)
+  if (is.null(extraccion_despues))
+  {
+    extraccion_despues = missing_value
+  }
+  
+  # compuesto correspondiente
+  extraccion_correspondiente <- extract(compuesto_correspondiente,punto)
+  if (is.null(extraccion_correspondiente))
+  {
+    extraccion_correspondiente = missing_value
+  }
+  
+  extraccion = list(extraccion_antes = extraccion_antes, 
+                    extraccion_correspondiente = extraccion_correspondiente,
+                    extraccion_despues = extraccion_despues)
+  
+  return(extraccion) 
+}
+
+# resta estandarizada
+resta_estandarizada <- function(antes,despues)
+{
+  resultado = (antes-despues)/antes
+  return(resultado)
+}
+
